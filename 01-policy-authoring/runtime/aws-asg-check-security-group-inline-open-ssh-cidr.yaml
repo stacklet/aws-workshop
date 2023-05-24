@@ -1,0 +1,11 @@
+policies:
+- name: workshop-asg-check-security-group-inline-open-ssh-cidr
+  resource: aws.asg
+  description: "ASG should not be open to world on ssh"
+  metadata:
+    severity: HIGH
+  filters:
+  - type: security-group
+    key: >
+      IpPermissions[?ToPort == `22` && (contains(IpRanges[].CidrIp, '0.0.0.0/0') || contains(Ipv6Ranges[].CidrIpv6, '::0'))]
+    value: not-null

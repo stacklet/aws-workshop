@@ -1,0 +1,116 @@
+#################################################################################
+#
+#   Copyright © 2022 Stacklet, Inc. All rights reserved.
+#   CONFIDENTIAL AND PROPRIETARY INFORMATION OF STACKLET, INC.
+#
+#   This file is provided pursuant to the license terms set forth in the Master
+#   Services Agreement, Proof of Concept Agreement and/or Design Partnership
+#   Agreement signed with Stacklet, Inc., if any, or if no such agreement has been
+#   signed, then pursuant to the 'LICENSE.TXT' file that accompanies this file.
+#
+#################################################################################
+
+
+vars:
+  policy_meta: &policy_meta
+    description: |
+      RDS should not use the default port (an attacker can easily
+      guess the port). For engines related to Aurora, MariaDB or
+      MySQL, the default port is 3306. PostgreSQL default port is
+      5432, Oracle default port is 1521 and SQL Server default port is
+      1433.
+    metadata:
+      category:
+      - security/access-control
+      creator: Stacklet
+      severity: low
+      autoremediable: true
+      remediation_effort: medium
+      remediation_risk: low
+      classification:
+      - pillar: security
+        segment: access-control
+        scope: default
+        severity: high
+      recommended_actions:
+        remediation:
+        - name: AWS Docs
+          description: |
+            Review and update the Database port
+          type: link
+          content: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Overview.DBInstance.Modifying.html
+        prevention:
+        - name: Policy Suggestion
+          description: |
+            Using a realtime CloudTrail mode RDS resource policy, trigger off
+            the CreateDBInstance event, modify the port that being used.
+          type: link
+          content: https://cloudcustodian.io/docs/aws/resources/rds.html#workshop-rds-actions-delete
+  filters: &filters
+  - or:
+    - port: empty
+    - and:
+      - type: value
+        key: engine
+        value: [postgres, aurora-postgresql]
+        op: in
+      - type: value
+        key: Endpoint.Port
+        op: eq
+        value: 5432
+    - and:
+      - type: value
+        key: engine
+        value: [mysql, aurora, aurora-mysql, mariadb]
+        op: in
+      - type: value
+        key: Endpoint.Port
+        op: eq
+        value: 3307
+    - and:
+      - type: value
+        key: engine
+        value: [oracle-ee, oracle-ee-cdb, oracle-se2, oracle-se2-cdb]
+        op: in
+      - type: value
+        key: Endpoint.Port
+        op: eq
+        value: 1521
+    - and:
+      - type: value
+        key: engine
+        value: [sqlserver-ee, sqlserver-se, sqlserver-ex, sqlserver-web]
+        op: in
+      - type: value
+        key: Endpoint.Port
+        op: eq
+        value: 1433
+  remediation_actions: &remediation_actions
+  - type: delete
+  create_events: &create_events
+  - event: CreateDBInstance
+    ids: requestParameters.dBInstanceIdentifier
+    source: rds.amazonaws.com
+  update_events: &update_events
+  - event: ModifyDBInstance
+    ids: requestParameters.dBInstanceIdentifier
+    source: rds.amazonaws.com
+policies:
+- name: workshop-rds-using-default-port-inform
+  resource: aws.rds
+  filters: *filters
+  <<: *policy_meta
+- name: workshop-rds-using-default-port-rtc
+  resource: aws.rds
+  <<: *policy_meta
+  mode:
+    type: cloudtrail
+    events: *create_events
+  filters: *filters
+- name: workshop-rds-using-default-port-rtu
+  resource: aws.rds
+  <<: *policy_meta
+  mode:
+    type: cloudtrail
+    events: *update_events
+  filters: *filters

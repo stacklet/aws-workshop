@@ -1,0 +1,94 @@
+#################################################################################
+#
+#   Copyright © 2022 Stacklet, Inc. All rights reserved.
+#   CONFIDENTIAL AND PROPRIETARY INFORMATION OF STACKLET, INC.
+#
+#   This file is provided pursuant to the license terms set forth in the Master
+#   Services Agreement, Proof of Concept Agreement and/or Design Partnership
+#   Agreement signed with Stacklet, Inc., if any, or if no such agreement has been
+#   signed, then pursuant to the 'LICENSE.TXT' file that accompanies this file.
+#
+#################################################################################
+
+
+vars:
+  policy_meta: &policy_meta
+    description: |
+      This control evaluates AWS Application Load Balancers to ensure they are
+      configured to drop invalid HTTP headers. The control fails if the value of
+      routing.http.drop_invalid_header_fields.enabled is set to false.
+    metadata:
+      category:
+      - compliance/AFSBP
+      - security/attack-surface
+      compliance:
+      - type: AFSBP
+        version: version 1
+        control-mappings:
+        - ELB.4
+      creator: Stacklet
+      severity: medium
+      autoremediable: true
+      remediation_effort: low
+      remediation_risk: medium
+      classification:
+      - pillar: security
+        scope: default
+        segment: attack-surface
+        severity: medium
+      - pillar: compliance
+        segment: AFSBP
+        scope: version 1
+        severity: medium
+      recommended_actions:
+        remediation:
+        - name: AWS Docs
+          description: |
+            To remediate this issue, configure your load balancer to drop
+            invalid header fields.
+          type: link
+          content: https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-standards-fsbp-controls.html#fsbp-elb-4
+  filters: &filters
+  - type: attributes
+    key: routing.http.drop_invalid_header_fields.enabled
+    op: eq
+    value: false
+  remediation_actions: &remediation_actions
+  - type: modify-attributes
+    attributes:
+      "routing.http.drop_invalid_header_fields.enabled": "true"
+  create_events: &create_events
+  - event: CreateLoadBalancer
+    ids: requestParameters.name
+    source: elasticloadbalancing.amazonaws.com
+  update_events: &update_events
+  - event: ModifyLoadBalancerAttributes
+    ids: requestParameters.loadBalancerArn
+    source: elasticloadbalancing.amazonaws.com
+policies:
+- name: workshop-app-elb-http-drop-invalid-header-disabled-inform
+  resource: aws.app-elb
+  filters: *filters
+  <<: *policy_meta
+- name: workshop-app-elb-http-drop-invalid-header-disabled-rtc
+  resource: aws.app-elb
+  <<: *policy_meta
+  mode:
+    type: cloudtrail
+    events: *create_events
+  filters: *filters
+- name: workshop-app-elb-http-drop-invalid-header-disabled-prevent
+  resource: aws.app-elb
+  <<: *policy_meta
+  mode:
+    type: cloudtrail
+    events: *create_events
+  filters: *filters
+  actions: *remediation_actions
+- name: workshop-app-elb-http-drop-invalid-header-disabled-rtu
+  resource: aws.app-elb
+  <<: *policy_meta
+  mode:
+    type: cloudtrail
+    events: *update_events
+  filters: *filters

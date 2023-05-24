@@ -19,7 +19,7 @@ ACME.inc are fervent users of Stacklet, which they use throughout their entire S
 
 Before we start hacking into the details, let's make sure that you have all the tools in place to run all the activities of this workshop fluidely. 
 
-Take a few minutes to go through the [installation guide](./01-laptop-setup.md)
+Take a few minutes to go through the [installation guide](./00-intro/01-laptop-setup.md)
 
 # Workshop Activities
 
@@ -32,7 +32,7 @@ Before we start hacking our way through developing and deploying a great solutio
 * Data Analytics (AssetDB)
 * Actions
 
-## Policy Authoring and Deployment 
+## [Policy Authoring and Deployment]([./01-policy-authoring/README.md])
 
 ### Shift Left Policy Authoring
 
@@ -42,11 +42,11 @@ In this phase, we take a closer look at authoring policies for Terraform. As a s
 
 You now dive into securing the runtime of the infrastructure, once it's been deployed via Terraform. You know that there are some break glass accounts and that it is important to keep an eye on resources even after they have been deployed. 
 
-### Deploying Runtime Policies to Protect your Cloud
+## [Deploying Runtime Policies to Protect your Cloud]([./02-policy-deployment/README.md])
 
 How that we have policies in place, let's deploy them in Stacklet, to make sure that your cloud is monitored in real-time, and that pre-existing assets are also taken care of. 
 
-## Development of Infrastructure with Stacklet
+## [Development of Infrastructure with Stacklet]([./03-infrastructure-deployment/README.md])
 
 ### Infrastructure as Code
 
@@ -56,9 +56,19 @@ You are now a member of the DevOps team in charge of building the Wordpress solu
 
 Many organizations prevent the use of console or CLI but under very special circumstances. Also many organizations experience special circumstances on quite a regular basis. Let us see how Stacklet can help keeping track of the changes made in the runtime, notify stakeholders and encourage them to take action. 
 
-## Reporting
+## [Reporting](./04-reporting/README.md)
+
+### Curated Experience - Stacklet Console
+
+Discover how Stacklet console presents results at the policy level and flags resources that are non compliant
+
+### Custom Experience - Data Analysis
 
 Stacklet provides you with an access to the raw data that the platform and AssetDB generate, including cost (billing) data from your Cloud Provider. This is hugely valuable when you want to discover issues in "Serendipity Mode". Let's discover some interesting queries you might run. 
+
+## Cleaning up the environment
+
+
 
 ## Final Words
 

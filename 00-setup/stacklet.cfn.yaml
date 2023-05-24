@@ -1,0 +1,413 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+
+  DestinationAccount:
+    Type: String
+
+  DestinationPrefix:
+    Type: String
+    Default: workshop
+
+  StackPrefix:
+    Type: String
+    Default: stacklet
+
+  IAMRegion:
+    Type: String
+    Default: us-east-1
+
+Conditions:
+  "CreateIAMResource": !Equals
+    - !Ref AWS::Region
+    - !Ref IAMRegion
+  "TargetSelfAgg": !Equals
+    - !Ref AWS::AccountId
+    - !Ref DestinationAccount
+
+Resources:
+  EventForwardRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Name: !Sub "${StackPrefix}-event-forward"
+      Description: !Sub "${StackPrefix} Event Forwarding"
+      EventPattern:
+        detail:
+          readOnly: [false]
+          managementEvent: [true]
+          errorCode:
+            - exists: false
+          eventSource:
+            [
+              {
+                "anything-but":
+                  [
+                    "sts.amazonaws.com"
+                  ]
+              }
+            ]
+        detail-type:
+          - "AWS API Call via CloudTrail"
+      State: "ENABLED"
+      Targets:
+        Fn::If:
+          - TargetSelfAgg
+          -
+            - Id: NetForwardEvents
+              Arn: !Sub "arn:aws:sns:${AWS::Region}:${AWS::AccountId}:${StackPrefix}-relay"
+          -
+            - Id: NetForwardEvents
+              Arn: !Sub "arn:aws:events:${AWS::Region}:${DestinationAccount}:event-bus/default"
+              RoleArn: !Sub "arn:aws:iam::${AWS::AccountId}:role/${StackPrefix}-forward"
+
+  NetDescribeRole:
+    Type: "AWS::IAM::Role"
+    Condition: CreateIAMResource
+    Properties:
+      RoleName: !Sub "${StackPrefix}-discover"
+      Description: !Sub "${StackPrefix} Read-Only Resource Collection"
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: "sts:AssumeRole"
+            Principal:
+              AWS: !Sub "arn:aws:iam::${DestinationAccount}:role/${DestinationPrefix}-collector"
+      Path: /
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/ReadOnlyAccess"
+
+  NetEventForwardRole:
+    Type: "AWS::IAM::Role"
+    Condition: CreateIAMResource
+    Properties:
+      RoleName: !Sub "${StackPrefix}-forward"
+      Description: !Sub "${StackPrefix} Event Forwarding"
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - events.amazonaws.com
+            Action:
+              - "sts:AssumeRole"
+      Path: /
+      Policies:
+        - PolicyName: PutEventsNetForward
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Effect: Allow
+                Action: "events:PutEvents"
+                Resource: !Sub "arn:aws:events:*:${DestinationAccount}:event-bus/default"
+
+  DescribePolicy:
+    Type: "AWS::IAM::Policy"
+    Condition: CreateIAMResource
+    Properties:
+      Roles:
+        - !Ref NetDescribeRole
+      PolicyName: !Sub "${StackPrefix}-describe-augments"
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - "support:Describe*"
+              - "appflow:List*"
+              - "appflow:Describe*"
+            Resource: "*"
+
+  ExecutionRole:
+    Type: "AWS::IAM::Role"
+    Condition: CreateIAMResource
+    Properties:
+      RoleName: !Sub "${StackPrefix}-execution"
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action: "sts:AssumeRole"
+            Principal:
+              AWS: !Sub "arn:aws:iam::${DestinationAccount}:role/${DestinationPrefix}-stacklet-execution"
+      Path: /
+      ManagedPolicyArns:
+        - "arn:aws:iam::aws:policy/ReadOnlyAccess"
+      Policies:
+        - PolicyName: AllowSQS
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: "sqs:SendMessage"
+                Resource: !Sub "arn:aws:sqs:*:${DestinationAccount}:*"
+        - PolicyName: AllowKMS
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: ["kms:Decrypt", "kms:GenerateDataKey"]
+                Resource: !Sub "arn:aws:kms:*:${DestinationAccount}:*"
+
+  CrossAccountTaggingPolicy:
+    DependsOn: ExecutionRole
+    Condition: CreateIAMResource
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Sub "${StackPrefix}-cross-account-tagging"
+      Roles: 
+        - !Ref ExecutionRole
+      PolicyDocument:
+        Statement:
+          - Sid: TagFullAccess
+            Effect: Allow
+            Action:
+              - acm:*Tag*
+              - apigateway:*Tag*
+              - autoscaling:*Tag*
+              - backup:*Tag*
+              - backup:*Untag*
+              - batch:*Tag*
+              - batch:*Untag*
+              - clouddirectory:*Tag*
+              - clouddirectory:*Untag*
+              - cloudformation:*Tag*
+              - cloudformation:*Untag*
+              - cloudfront:*Tag*
+              - cloudfront:*Untag*
+              - cloudhsm:*Tag*
+              - cloudhsm:*Untag*
+              - cloudsearch:*Tag*
+              - cloudtrail:*Tag*
+              - cloudwatch:*Tag*
+              - cloudwatch:*Untag*
+              - codeartifact:*Tag*
+              - codeartifact:*Untag*
+              - codebuild:*Tag*
+              - codebuild:*Untag*
+              - codecommit:*Tag*
+              - codecommit:*Untag*
+              - codepipeline:*Tag*
+              - codepipeline:*Untag*
+              - cognito-identity:*Tag*
+              - cognito-identity:*Untag*
+              - cognito-idp:*Tag*
+              - cognito-idp:*Untag*
+              - config:*Tag*
+              - config:*Untag*
+              - datapipeline:*Tag*
+              - dax:*Tag*
+              - dax:*Untag*
+              - dax:TagResource
+              - dax:UntagResource
+              - directconnect:*Tag*
+              - directconnect:*Untag*
+              - dlm:*Tag*
+              - dlm:*Untag*
+              - dms:*Tag*
+              - ds:*Tag*
+              - dynamodb:*Tag*
+              - dynamodb:*Untag*
+              - ec2:*Tag*
+              - ecr:*Tag*
+              - ecr:*Untag*
+              - ecs:*Tag*
+              - ecs:*Untag*
+              - eks:*Tag*
+              - eks:*Untag*
+              - elasticache:*Tag*
+              - elasticbeanstalk:*Tag*
+              - elasticloadbalancing:AddTags
+              - elasticloadbalancing:RemoveTags
+              - es:*Tag*
+              - events:*Tag*
+              - events:*Untag*
+              - firehose:*Tag*
+              - firehose:*Untag*
+              - gamelift:*Tag*
+              - gamelift:*Untag*
+              - glacier:*Tag*
+              - glue:*Tag*
+              - glue:*Untag*
+              - health:*Tag*
+              - iam:*Tag*
+              - iam:*Untag*
+              - iot:*Tag*
+              - iot:*Untag*
+              - kafka:*Tag*
+              - kafka:*Untag*
+              - kinesis:*Tag*
+              - kinesisanalytics:*Tag*
+              - kinesisanalytics:*Untag*
+              - kms:*Tag*
+              - kms:*Untag*
+              - lambda:*Tag*
+              - lambda:*Untag*
+              - lightsail:*Untag*
+              - logs:*Tag*
+              - logs:*Untag*
+              - machinelearning:*Tag*
+              - mq:*Tag*
+              - opsworks-cm:TagResource
+              - opsworks-cm:UntagResource
+              - opsworks:*Tag*
+              - opsworks:*Untag*
+              - qldb:*Tag*
+              - qldb:*Untag*
+              - rds:*Tag*
+              - redshift:*Tag*
+              - route53:*Tag*
+              - route53domains:*Tag*
+              - s3:*Tag*
+              - sdb:DomainMetadata
+              - sdb:GetAttributes
+              - sdb:Select
+              - secretsmanager:*Tag*
+              - secretsmanager:*Untag*
+              - servicecatalog:*Tag*
+              - servicecatalog:*Untag*
+              - shield:*Tag*
+              - shield:*Untag*
+              - sns:*Tag*
+              - sns:*Untag*
+              - sqs:*Tag*
+              - sqs:*Untag*
+              - storagegateway:*Tag*
+              - waf-regional:*Tag*
+              - waf-regional:*Untag*
+              - waf:*Tag*
+              - waf:*Untag*
+              - workspaces:*Tag*
+              - lightsail:*Tag*
+            Resource: '*'
+
+  AutoRemediationPolicy:
+    DependsOn: ExecutionRole
+    Condition: CreateIAMResource
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Sub "${StackPrefix}-cross-account-autoremediation"
+      Roles: 
+        - !Ref ExecutionRole
+      PolicyDocument:
+        Statement:
+        - Action:
+          - ec2:RevokeSecurityGroupIngress
+          - ec2:RevokeSecurityGroupEgress
+          Resource: "*"
+          Effect: Allow
+          Sid: SGRemovePermissions
+        - Action:
+          - securityhub:BatchImportFindings
+          - securityhub:BatchUpdateFindings
+          - securityhub:UpdateFindings
+          Resource: "*"
+          Effect: Allow
+          Sid: PostFindings
+        - Action:
+          - securityhub:GetFindings
+          Resource: "*"
+          Effect: Allow
+          Sid: GetFindings
+        - Action:
+          - ecr:PutLifecyclePolicy
+          - ecr:DeleteLifecyclePolicy
+          Resource: "*"
+          Effect: Allow
+          Sid: SetECRLifecycle
+        - Action:
+          - ec2:DescribeInstances
+          - ec2:DescribeInstanceAttributes
+          - ec2:ModifyInstanceAttribute
+          Resource: "*"
+          Effect: Allow
+          Sid: ResizeEC2Instances
+        - Action:
+          - logs:PutRetentionPolicy
+          Resource: "*"
+          Effect: Allow
+          Sid: SetRetentionOnLogGroups
+        - Action:
+          - ec2:DeleteSnapshot
+          Resource: "*"
+          Effect: Allow
+          Sid: DeleteEBSSnapshots
+        - Action:
+          - ec2:DeregisterImage
+          Resource: "*"
+          Effect: Allow
+          Sid: DeregisterAMI
+        - Action:
+          - dynamodb:DeleteBackup
+          Resource: "*"
+          Effect: Allow
+          Sid: DeleteDDBSnapshot
+        - Action:
+          - rds:DeleteDBSnapshot
+          Resource: "*"
+          Effect: Allow
+          Sid: DeleteRDSSnapshot
+        - Action:
+          - rds:DeleteDBClusterSnapshot
+          Resource: "*"
+          Effect: Allow
+          Sid: DeleteAuroraSnapshot
+        - Action:
+          - redshift:DeleteClusterSnapshot
+          Resource: "*"
+          Effect: Allow
+          Sid: DeleteRedshiftSnapshot
+        - Action:
+          - ec2:ReleaseAddress
+          - ec2:DisassociateAddress
+          Resource: "*"
+          Effect: Allow
+          Sid: ReleaseElasticIP
+        - Action:
+          - s3:GetLifecycleConfiguration
+          - s3:PutLifecycleConfiguration
+          Resource: "*"
+          Effect: Allow
+          Sid: ConfigureS3MPU
+        - Action:
+          - elasticache:DeleteSnapshot
+          Resource: "*"
+          Effect: Allow
+          Sid: DeleteElasticacheSnapshots
+        - Action:
+          - rds:ModifyDBInstance
+          Resource: "*"
+          Effect: Allow
+          Sid: EnforceRDSSnapshotRetention
+        - Action:
+          - rds:ModifyDBCluster
+          Resource: "*"
+          Effect: Allow
+          Sid: EnforceAuroraSnapshotRetention
+        - Action:
+          - redshift:ModifyCluster
+          Resource: "*"
+          Effect: Allow
+          Sid: EnforceRedshiftSnapshotRetention
+        - Sid: TerminateEC2Instances
+          Effect: Allow
+          Action:
+            - ec2:TerminateInstances
+          Resource: '*'
+
+Outputs:
+  NetDescribeRoleArn:
+    Description: "Stacklet Collector Role Arn"
+    Value: !GetAtt NetDescribeRole.Arn
+    Condition: CreateIAMResource
+
+
+  NetEventForwardRoleArn:
+    Description: "Stacklet Forwarder Role Arn"
+    Value: !GetAtt NetEventForwardRole.Arn
+    Condition: CreateIAMResource
+
+  ExecutionRoleArn:
+    Description: "Stacklet Execution Role Arn"
+    Value: !GetAtt ExecutionRole.Arn
+    Condition: CreateIAMResource

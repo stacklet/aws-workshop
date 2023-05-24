@@ -1,0 +1,134 @@
+#################################################################################
+#
+#   Copyright © 2022 Stacklet, Inc. All rights reserved.
+#   CONFIDENTIAL AND PROPRIETARY INFORMATION OF STACKLET, INC.
+#
+#   This file is provided pursuant to the license terms set forth in the Master
+#   Services Agreement, Proof of Concept Agreement and/or Design Partnership
+#   Agreement signed with Stacklet, Inc., if any, or if no such agreement has been
+#   signed, then pursuant to the 'LICENSE.TXT' file that accompanies this file.
+#
+#################################################################################
+vars:
+  policy_meta: &policy_meta
+    description: |
+      This control checks whether HTTP to HTTPS redirection is configured on all
+      HTTP listeners of Application Load Balancers. The control fails if any of
+      the HTTP listeners of Application Load Balancers do not have HTTP to HTTPS
+      redirection configured.
+    metadata:
+      category:
+      - compliance/pci-dss
+      - compliance/nist-800-53
+      - compliance/AFSBP
+      severity: medium
+      creator: Stacklet
+      compliance:
+      - type: PCI-DSS
+        version: 3.2.1
+        control-mappings:
+        - 2.3
+        - 4.1
+      - type: NIST-800-53
+        version: rev_5
+        control-mappings:
+        - (AC-4)
+        - AC-4(22)
+        - AC-17(2)
+        - AC-24(1)
+        - AU-9(3)
+        - CA-9(b)
+        - IA-5(1)(c)
+        - PM-17(b)
+        - SC-7(4)(b)
+        - SC-7(4)(g)
+        - (SC-8)
+        - SC-8(1)
+        - SC-8(2)
+        - SC-8(3)
+        - SC-8(4)
+        - SC-8(5)
+        - SC-13(a)
+        - (SC-23)
+        - SI-1(a)(2)
+        - SI-1(c)(2)
+      - type: AFSBP
+        version: version 1
+        control-mappings:
+        - ELBv2.1
+      recommended_actions:
+        remediation:
+        - name: AWS Docs
+          description: |
+            Review and ensure HTTP listeners are being redirected to HTTPS for
+            your application load balancers.
+          type: link
+          content: https://aws.amazon.com/premiumsupport/knowledge-center/elb-redirect-http-to-https-using-alb/
+        - name: Policy Action
+          description: |
+            Deletes Application Load Balancers identified by the policies
+            filters.
+          type: link
+          content: https://cloudcustodian.io/docs/aws/resources/app-elb.html#var.database_portapp-elb-actions-delete
+        - name: Policy Action
+          description: |
+            Modifies Application Load Balancers listeners identified by the policies
+            filters.
+          type: link
+          content: https://cloudcustodian.io/docs/aws/resources/app-elb.html#var.database_portapp-elb-actions-modify-listener
+      classification:
+      - pillar: compliance
+        segment: pci-dss
+        scope: 3.2.1
+        severity: medium
+      - pillar: compliance
+        segment: nist-800-53
+        scope: rev_5
+        severity: medium
+      - pillar: compliance
+        segment: AFSBP
+        scope: version 1
+        severity: medium
+  filters: &filters
+  - type: listener
+    key: Protocol
+    value: HTTP
+  - or:
+    - type: value
+      key: |
+        "c7n:MatchedListeners"[].DefaultActions[?RedirectConfig.Protocol == 'HTTP'][]
+      value: not-null
+    - type: value
+      key: |
+        "c7n:MatchedListeners"[].DefaultActions[?Type != 'fixed-response' && Type != 'redirect'][]
+      value: not-null
+  create_events: &create_events
+  - event: CreateLoadBalancer
+    ids: requestParameters.name
+    source: elasticloadbalancing.amazonaws.com
+  update_events: &update_events
+  - event: ModifyListener
+    ids: responseElements.listeners[].loadBalancerArn
+    source: elasticloadbalancing.amazonaws.com
+  - event: ModifyLoadBalancerAttributes
+    ids: requestParameters.loadBalancerArn
+    source: elasticloadbalancing.amazonaws.com
+policies:
+- name: workshop-app-elb-redirect-http-request-to-https-inform
+  resource: aws.app-elb
+  filters: *filters
+  <<: *policy_meta
+- name: workshop-app-elb-redirect-http-request-to-https-rtc
+  resource: aws.app-elb
+  <<: *policy_meta
+  mode:
+    type: cloudtrail
+    events: *create_events
+  filters: *filters
+- name: workshop-app-elb-redirect-http-request-to-https-rtu
+  resource: aws.app-elb
+  <<: *policy_meta
+  mode:
+    type: cloudtrail
+    events: *update_events
+  filters: *filters

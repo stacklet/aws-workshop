@@ -1,0 +1,6 @@
+- resource.__tfmeta.filename: positive.tf
+  file_line_start: 1
+- resource.__tfmeta.filename: positive.tf
+  file_line_start: 5
+- resource.__tfmeta.filename: positive.tf
+  file_line_start: 10

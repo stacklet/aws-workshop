@@ -1,0 +1,16 @@
+policies:
+   - name: workshop-asg-check-security-group-inline-open-cidr
+     resource: terraform.aws_autoscaling_group
+     description: "ASG should not be open to world on ssh"
+     metadata:
+       severity: HIGH
+     filters:
+       - type: traverse
+         resources: [ aws_security_group ]
+         attrs:
+            - key: ingress_with_cidr_blocks[].cidr_blocks 
+              op: contains
+              value: "0.0.0.0/0"
+            - key: ingress_with_cidr_blocks[].to_port 
+              op: eq
+              value: 22

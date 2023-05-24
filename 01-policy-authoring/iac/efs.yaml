@@ -1,0 +1,15 @@
+policies:
+- name: workshop-efs-not-encrypted
+  description: Elastic File System (EFS) must be encrypted
+  resource: terraform.aws_efs_file_system
+  metadata:
+    severity: High
+    category: Encryption
+    provider: aws
+    source: kics
+    source_path: assets/queries/terraform/aws/efs_not_encrypted
+  filters:
+  - or:
+    - encrypted: empty
+    - encrypted: false
+    - encrypted: 'false'
