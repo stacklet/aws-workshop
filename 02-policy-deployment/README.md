@@ -4,7 +4,7 @@ Now that policies are authored you need to bind them to your account(s) and chec
 
 Browse to Stacklet Platform and log in:
 
-![Log In](../assets/01-login.png)
+![Log In](../assets/01-console-login.png)
 
 # Adding a Policy Repository
 
@@ -16,7 +16,7 @@ Use the following parameters to add the repository:
 
 * Name: `Workshop Policies`
 * URL: `https://github.com/stacklet/aws-workshop`
-* Branch name: `deployment`
+* Branch name: `main`
 * Policy Directories: `01-policy-authoring/runtime`
 
 Leave everything else as default, and click the `add` button. 
@@ -28,6 +28,8 @@ Now browse to the repository, go to the `Policies` button and refresh the page u
 All policies are now loaded in the library. You can now organize them in a Policy Collection. Browse to `Admin > Controls > Policies` and filter the policies by typing `provider:aws` in the search bar. 
 
 Select all of them, and hit the `Add to Collection` button.
+
+![Create policy collection](../assets/03-policy-collection.png)
 
 In the pop up window, note the `Automatically Update` check box. If you tick this box, then changes made to policies in the repository will automatically make their way to the collection. This is equivalent to a `docker-image:latest` reference basically. 
 

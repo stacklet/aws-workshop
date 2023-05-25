@@ -1,4 +1,3 @@
-
 # Laptop / Workstation Setup
 
 ## Download this repository
@@ -59,9 +58,8 @@ Keep a trace of that result.
 
 Connect to the console `console.ws-<DestinationAccountID>.workshop.stacklet.io` with the username and password that have been shared with you earlier, and browse to `Admin > Accounts`. Hit the `Add Account` button to immediately onboard the account you just enabled. 
 
-![Adding a single AWS Account](../assets/add-aws-account.png)
+![Adding a single AWS Account](../assets/04-add-account.png)
 
 Use the output of the CloudFormation stack as the `Security Context`. 
-
 
 [Back to Top](../README.md)

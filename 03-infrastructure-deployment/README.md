@@ -1,6 +1,6 @@
 # Introduction
 
-You are a member of a DevOps team at ACME.inc
+You are now a member of a DevOps team at ACME.inc
 
 Recently, a new initiative was launched and requires a new website. After careful consideration of several solutions, the decision was made to use Wordpress as the technology for this project. 
 

@@ -1,16 +1,20 @@
 # Authoring Policies
 
-**Note**: This workshop is not a security discussion. Instead, we use overly simplified use casese to demonstrate how Stacklet can be used to help on in your governance journey. 
+**Note**: This workshop is not a security discussion. Instead, overly simplify use cases to focus on the workflow. We understand that security suggestions made here are far from perfect. 
 
 ## Before you start
 
-The code for this section is available in the folder `01-policy-authoring` and its subfolders. 
+The code for this section is available in the folder `01-policy-authoring` and its subfolders. Make sure to browse to that folder to run the commands indicated below
+
+```shell
+cd 01-policy-authoring
+```
 
 ## High Level Design 
 
 As a member of the security team your mission is to help other developers consider security throughout the lifecycle of their applications. Said otherwise, security starts in the pipeline. 
 
-The first thing you do as you are tasked with proposing a security framework for the new blog is look at the different components and how they will be code. At this stage of the development, ACME, inc. is really just looking to enable further experimentation by the product team, and the infrastructure can be a "quick and dirty" design. 
+You are tasked with proposing a security framework for the new blog. You start by researching at the different components and their potential security options. At this stage of the development, ACME, inc. is really just looking at enabling further experimentation by the product team. The infrastructure is far from production-readiness, but is representative of what will happen in higher environments.
 
 The team has come up with an early internal proposal: 
 
@@ -18,10 +22,10 @@ The team has come up with an early internal proposal:
 
 This informs you that the main building block in the solution will be
 
-* RDS
-* Autoscaling Groups & EC2 instances
-* ELBs
-* EFS to store shared assets between web servers
+* AWS ELB to serve the frontend
+* AWS Autoscaling Group & AWS EC2 instances to serve the application
+* AWS RDS as a database backend
+* AWS EFS as a common storage backend between web servers
 
 As the solution matures, additional components will appear. This is already a great start.
 
@@ -36,8 +40,8 @@ Armed with this list of AWS Services to secure, you start evaluating company pol
 
 ## Translation into IaC Policies
 
-IaC controls are extremely useful in organizations that use Terraform as their primary tool to maintain infrastructure. IaC code that is not compliant with one or more policies can be intercepted pre-commit (on developer laptop), pre-merge (in CI pipeline) or pre-deploy (in CD pipeline) and denied moving forward. 
-This guarantees that everything that reaches the cloud is compliant with the controls defined by the organization. 
+IaC controls are extremely useful in organizations using Terraform as their primary infrastrcture tool. IaC code that is not compliant with one or more policies can be intercepted pre-commit (on developer laptop), pre-merge (in CI pipeline) or pre-deploy (in CD pipeline) and denied moving forward. 
+This guarantees that everything that the application is compliant with ACME.inc's guardrails when you deploy it. 
 
 The workflow to generate more IaC policies is the following: 
 
@@ -74,6 +78,30 @@ policies:
 
 You can repeat the operation for other services. Once all the policies are written, they can be shared in repository templates, so that developers inherit them automagically everytime they start a new project. 
 
+Testing policies is a mandatory step that serves two purposes: 
+
+1. Make sure that the policy behave as expected
+2. Provide documentated guidelines for developers
+
+To create a test, we need to create a `tests/<policy-name>` folder at the same level as the policy files. For EFS, that gives:
+
+```shell
+$ cat efs.yaml | grep "name"
+- name: workshop-efs-not-encrypted
+$ tree .
+.
+├── efs.yaml
+└── tests
+    └── workshop-efs-not-encrypted
+        ├── left.plan.yaml
+        ├── negative.tf
+        └── positive.tf
+```
+
+The positive and negative files contain example of failing and passing resources respectively (ie. positive is a policy match, which turns into being a problem)
+
+The `left.plan.yaml` file contains pointers to the resources in test files. 
+
 ## Translation into Runtime Policies
 
 ### Filter Authoring
@@ -95,7 +123,8 @@ As a starting point, let's look at the AWS API response to a query to [describe 
 },
     ],
     "NextMarker": "string"
-}```
+}
+```
 
 We immediately identify the node indicating the encryption, and can infer the policy: 
 
@@ -145,8 +174,8 @@ It is pretty clear reading that list that `CreateFileSystem` and `UpdateFileSyst
     source: efs.amazonaws.com
 ```
 
-will make sure that our policy subscribes to the right event. 
+will make sure that our policy subscribes to the creation of new EFS Drives. 
 
-Repeat the research and process for other services and policies. 
+Repeat the research and process for other services to create as many filters in the runtime as you had in the code. Depending on how the resource can be changed, you may create one to three policies (pull mode, create event, change event). 
 
 [Back to Top](../README.md)
