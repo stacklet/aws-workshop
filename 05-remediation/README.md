@@ -21,17 +21,48 @@ Actions are applied subsequently to filtering resources, and can be leveraged wi
 * Pull Mode: From "Search and Flag", we move to "Search and Fix"
 * Event Mode: Actions react to Create and/or Update events and apply to a single resource or a small batch of resources
 
+# AWS IAM Permissions 
+
+By default, policies only operate in Read Only mode. You must deploy a new set of permissions to run remediation policies.
+
+Deploy the [CloudFormation template](./stacklet-remedation.cfn.yaml) in  `us-east-1`: 
+
+```shell
+cd 05-remediation
+aws --region us-east-1 cloudformation deploy \
+    --template-file stacklet-remediation.cfn.yaml \
+    --parameter-override DestinationAccount=<DestinationAccountID> DestinationPrefix=ws-<DestinationAccountID> \
+    --capabilities CAPABILITY_NAMED_IAM \
+    --stack-name StackletEnablementRemediation
+```
+
+Extract the ARN of the role with 
+
+```shell
+
+```
+
+
 # Loading Remediation Policies
 
-Log back to the console then browse to `Admin > Controls > Repositories` then hit the `Add Repository` button. 
+Log back to the console then browse to `Admin > Controls > Repositories` then edit the repository. 
 
-![Add Repository](../assets/02-add-repository.png)
+In the `Advanced Parameters > Policy Directories` add `,05-remediation/runtime` to the existing folder. 
 
-Use the following parameters to add the repository: 
+Save, and scan the repository again. Create a new policy collection called `Remediation` that contains all the policies which names end in `prevent`, `remediate` and `protect`.
 
-* Name: `Workshop Policies - Remediation`
-* URL: `https://github.com/stacklet/aws-workshop`
-* Branch name: `main`
-* Policy Directories: `05-remediation/runtime`
+Now create a new binding to execute this new collection on the previous accounts. Make sure to set the `Security Context`  to the ARN you extracted in the previous paragraph. 
+Also leave the `Dry Run` mode unticked. We actually want to run the actions.
+
+Finally, hit the `Run Now` button. 
+
+# Analyzing Results
+
+From the binding page itself, pick a policy you know will have at least one remediation to run, such as the ELB Bad Headers one, and regularly refresh the execution tab until the new executions happen. 
+
+When that's done, check the one that matched a resource and read the logs to discover which actions were taken. 
+
+Now go to the web console of AWS, check the resource, and verify that it is now compliant with the policy. 
+
 
 [Next Step](../06-conclusion/README.md) | [Back to Top](../README.md)
