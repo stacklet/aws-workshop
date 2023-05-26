@@ -57,14 +57,14 @@ policies:
 - name: workshop-asg-check-sg-open-ssh-rtc
   resource: aws.asg
   mode: 
-    - type: cloudtrail
-      events: *create_events
+    type: cloudtrail
+    events: *create_events
   filters: *filters
   <<: *policy_meta
 - name: workshop-asg-check-sg-open-ssh-rtu
   resource: aws.asg
   mode: 
-    - type: cloudtrail
-      events: *update_events
+    type: cloudtrail
+    events: *update_events
   filters: *filters
   <<: *policy_meta
