@@ -48,16 +48,12 @@ vars:
           content: https://cloudcustodian.io/docs/aws/resources/rds.html#workshop-rds-actions-delete
   filters: &filters
   - or:
-    - port: empty
     - and:
+      - port: empty
       - type: value
         key: engine
-        value: [postgres, aurora-postgresql]
+        value: [mysql, aurora, aurora-mysql, mariadb]
         op: in
-      - type: value
-        key: Endpoint.Port
-        op: eq
-        value: 5432
     - and:
       - type: value
         key: engine
@@ -67,26 +63,11 @@ vars:
         key: Endpoint.Port
         op: eq
         value: 3306
-    - and:
-      - type: value
-        key: engine
-        value: [oracle-ee, oracle-ee-cdb, oracle-se2, oracle-se2-cdb]
-        op: in
-      - type: value
-        key: Endpoint.Port
-        op: eq
-        value: 1521
-    - and:
-      - type: value
-        key: engine
-        value: [sqlserver-ee, sqlserver-se, sqlserver-ex, sqlserver-web]
-        op: in
-      - type: value
-        key: Endpoint.Port
-        op: eq
-        value: 1433
   remediation_actions: &remediation_actions
-  - type: delete
+  - type: modify-db
+    update:
+      - property: 'DBPortNumber'
+        value: 3307    
   create_events: &create_events
   - event: CreateDBInstance
     ids: requestParameters.dBInstanceIdentifier
@@ -96,21 +77,24 @@ vars:
     ids: requestParameters.dBInstanceIdentifier
     source: rds.amazonaws.com
 policies:
-- name: workshop-rds-using-default-port-inform
+- name: workshop-rds-using-default-port-remediate
   resource: aws.rds
   filters: *filters
+  actions: *remediation_actions
   <<: *policy_meta
-- name: workshop-rds-using-default-port-rtc
+- name: workshop-rds-using-default-port-prevent
   resource: aws.rds
   <<: *policy_meta
   mode:
     type: cloudtrail
     events: *create_events
   filters: *filters
-- name: workshop-rds-using-default-port-rtu
+  actions: *remediation_actions
+- name: workshop-rds-using-default-port-protect
   resource: aws.rds
   <<: *policy_meta
   mode:
     type: cloudtrail
     events: *update_events
   filters: *filters
+  actions: *remediation_actions

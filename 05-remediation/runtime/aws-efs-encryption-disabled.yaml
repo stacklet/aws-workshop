@@ -1,0 +1,101 @@
+#################################################################################
+#
+#   Copyright © 2022 Stacklet, Inc. All rights reserved.
+#   CONFIDENTIAL AND PROPRIETARY INFORMATION OF STACKLET, INC.
+#
+#   This file is provided pursuant to the license terms set forth in the Master
+#   Services Agreement, Proof of Concept Agreement and/or Design Partnership
+#   Agreement signed with Stacklet, Inc., if any, or if no such agreement has been
+#   signed, then pursuant to the 'LICENSE.TXT' file that accompanies this file.
+#
+#################################################################################
+
+
+vars:
+  policy_meta: &policy_meta
+    description: |
+      This policy will identify all AWS EFS volumes which are not encrypted.
+      Per AWS security best practices, all EFS volumes should be encrypted to
+      protect sensitive data from attackers and unauthorized users.
+    metadata:
+      category:
+      - security/encryption
+      - compliance/cis
+      - compliance/nist-800-53
+      - compliance/AFSBP
+      compliance:
+      - type: CCM
+        version: 3.0.1
+        control-mappings:
+        - EKM-03
+      - type: CIS
+        version: 1.5.0
+        control-mappings:
+        - '2.4.1'
+      - type: NIST-800-53
+        version: rev_5
+        control-mappings:
+        - AU-9(3)
+        - CP-9(d)
+        - SC-8(3)
+        - SC-8(4)
+        - SC-13(a)
+        - SC-28(1)
+        - SI-19(4)
+      - type: AFSBP
+        version: version 1
+        control-mappings:
+        - EFS.1
+      creator: Stacklet
+      severity: high
+      autoremediable: false
+      remediation_effort: low
+      remediation_risk: low
+      classification:
+      - pillar: security
+        segment: encryption
+        scope: default
+        severity: high
+      - pillar: compliance
+        segment: cis
+        scope: 1.5.0
+        severity: high
+      - pillar: compliance
+        segment: nist-800-53
+        scope: rev_5
+        severity: high
+      - pillar: compliance
+        segment: AFSBP
+        scope: version 1
+        severity: medium
+      recommended_actions:
+        remediation:
+        - name: AWS Docs
+          description: |
+            Review and configure encryption for your EFS drives.
+          type: link
+          content: https://docs.aws.amazon.com/efs/latest/ug/encryption.html
+  filters: &filters
+  - or:
+    - Encrypted: empty
+    - Encrypted: false
+  create_events: &create_events
+  - event: CreateFileSystem
+    ids: responseElements.fileSystemId
+    source: efs.amazonaws.com
+  remediation_actions: &remediation_actions
+  - type: delete
+policies:
+- name: workshop-efs-encryption-disabled-remediate
+  resource: aws.efs
+  filters: *filters
+  actions: *remediation_actions
+  <<: *policy_meta
+- name: workshop-efs-encryption-disabled-prevent
+  resource: aws.efs
+  actions: *remediation_actions
+  <<: *policy_meta
+  mode:
+    type: cloudtrail
+    events: *create_events
+  filters: *filters

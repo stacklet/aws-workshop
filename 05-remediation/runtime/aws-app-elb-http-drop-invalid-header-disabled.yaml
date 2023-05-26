@@ -53,6 +53,10 @@ vars:
     key: routing.http.drop_invalid_header_fields.enabled
     op: eq
     value: false
+  remediation_actions: &remediation_actions
+  - type: modify-attributes
+    attributes:
+      "routing.http.drop_invalid_header_fields.enabled": "true"
   create_events: &create_events
   - event: CreateLoadBalancer
     ids: requestParameters.name
@@ -62,21 +66,24 @@ vars:
     ids: requestParameters.loadBalancerArn
     source: elasticloadbalancing.amazonaws.com
 policies:
-- name: workshop-app-elb-http-drop-invalid-header-disabled-inform
+- name: workshop-app-elb-http-drop-invalid-header-disabled-remediate
   resource: aws.app-elb
   filters: *filters
   <<: *policy_meta
-- name: workshop-app-elb-http-drop-invalid-header-disabled-rtc
+  actions: *remediation_actions
+- name: workshop-app-elb-http-drop-invalid-header-disabled-prevent
   resource: aws.app-elb
   <<: *policy_meta
   mode:
     type: cloudtrail
     events: *create_events
   filters: *filters
-- name: workshop-app-elb-http-drop-invalid-header-disabled-rtu
+  actions: *remediation_actions
+- name: workshop-app-elb-http-drop-invalid-header-disabled-protect
   resource: aws.app-elb
   <<: *policy_meta
   mode:
     type: cloudtrail
     events: *update_events
   filters: *filters
+  actions: *remediation_actions

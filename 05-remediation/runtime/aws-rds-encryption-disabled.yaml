@@ -1,0 +1,124 @@
+#################################################################################
+#
+#   Copyright © 2022 Stacklet, Inc. All rights reserved.
+#   CONFIDENTIAL AND PROPRIETARY INFORMATION OF STACKLET, INC.
+#
+#   This file is provided pursuant to the license terms set forth in the Master
+#   Services Agreement, Proof of Concept Agreement and/or Design Partnership
+#   Agreement signed with Stacklet, Inc., if any, or if no such agreement has been
+#   signed, then pursuant to the 'LICENSE.TXT' file that accompanies this file.
+#
+#################################################################################
+
+
+vars:
+  policy_meta: &policy_meta
+    description: |
+      This policy will identify all AWS RDS instances which are not encrypted.
+      Per AWS security best practices, all RDS instances  should be encrypted to
+      protect sensitive data from attackers and unauthorized users.
+    metadata:
+      category:
+      - security/encryption
+      - compliance/cis
+      - compliance/nist-800-53
+      - compliance/AFSBP
+      compliance:
+      - type: CIS
+        version: 1.4.0
+        control-mappings:
+        - 2.3.1
+      - type: CIS
+        version: 1.5.0
+        control-mappings:
+        - 2.3.1
+      - type: CCM
+        version: 3.0.1
+        control-mappings:
+        - EKM-03
+      - type: NIST-800-53
+        version: rev_5
+        control-mappings:
+        - AU-9(3)
+        - CP-9(d)
+        - SC-8(3)
+        - SC-8(4)
+        - SC-13(a)
+        - SC-28(1)
+        - SI-19(4)
+      - type: AFSBP
+        version: version 1
+        control-mappings:
+        - RDS.3
+      creator: Stacklet
+      severity: high
+      autoremediable: true
+      remediation_effort: high
+      remediation_risk: low
+      classification:
+      - pillar: security
+        segment: encryption
+        scope: default
+        severity: high
+      - pillar: compliance
+        segment: cis
+        scope: 1.4.0
+        severity: high
+      - pillar: compliance
+        segment: cis
+        scope: 1.5.0
+        severity: high
+      - pillar: compliance
+        segment: nist-800-53
+        scope: rev_5
+        severity: high
+      - pillar: compliance
+        segment: AFSBP
+        scope: version 1
+        severity: medium
+      recommended_actions:
+        remediation:
+        - name: AWS Docs
+          description: |
+            Review and replace non-encrypted RDS instances.
+          type: link
+          content: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_DeleteInstance.html
+        - name: Policy Action
+          description: |
+            Deletes RDS instances identified by the policies filters.
+          type: link
+          content: https://cloudcustodian.io/docs/aws/resources/rds.html#workshop-rds-actions-delete
+        prevention:
+        - name: Policy Suggestion
+          description: |
+            Using a realtime CloudTrail mode RDS resource policy, trigger off
+            the CreateDBInstance event, filter for missing encryption and take
+            the action of delete. Encryption cannot be enabled after an RDS
+            instance is launched.
+          type: link
+          content: https://cloudcustodian.io/docs/aws/resources/rds.html#workshop-rds-actions-delete
+  filters: &filters
+  - type: value
+    key: StorageEncrypted
+    op: ne
+    value: true
+  remediation_actions: &remediation_actions
+  - type: delete
+  create_events: &create_events
+  - event: CreateDBInstance
+    ids: requestParameters.dBInstanceIdentifier
+    source: rds.amazonaws.com
+policies:
+- name: workshop-rds-encryption-disabled-remediate
+  resource: aws.rds
+  filters: *filters
+  actions: *remediation_actions
+  <<: *policy_meta
+- name: workshop-rds-encryption-disabled-prevent
+  resource: aws.rds
+  <<: *policy_meta
+  mode:
+    type: cloudtrail
+    events: *create_events
+  filters: *filters
+  actions: *remediation_actions

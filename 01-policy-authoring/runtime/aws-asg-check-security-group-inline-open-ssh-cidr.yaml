@@ -1,11 +1,70 @@
-policies:
-- name: workshop-asg-check-security-group-inline-open-ssh-cidr
-  resource: aws.asg
-  description: "ASG should not be open to world on ssh"
-  metadata:
-    severity: HIGH
-  filters:
+#################################################################################
+#
+#   Copyright © 2022 Stacklet, Inc. All rights reserved.
+#   CONFIDENTIAL AND PROPRIETARY INFORMATION OF STACKLET, INC.
+#
+#   This file is provided pursuant to the license terms set forth in the Master
+#   Services Agreement, Proof of Concept Agreement and/or Design Partnership
+#   Agreement signed with Stacklet, Inc., if any, or if no such agreement has been
+#   signed, then pursuant to the 'LICENSE.TXT' file that accompanies this file.
+#
+#################################################################################
+vars:
+  policy_meta: &policy_meta
+    description: |
+      This control checks whether instances deployed via an ASG can be reached 
+      on admin port 22 from the internet.
+    metadata:
+      category:
+      - security/access-control
+      severity: medium
+      creator: Stacklet
+      recommended_actions:
+        remediation:
+        - name: AWS Docs
+          description: |
+            Suspend the ASG while you take action to remediate in Terraform.
+          type: link
+          content: https://docs.aws.amazon.com/autoscaling/ec2/userguide/as-suspend-resume-processes.html
+        - name: Policy Action
+          description: |
+            Suspend the ASG while you take action to remediate in Terraform.
+          type: link
+          content: https://cloudcustodian.io/docs/aws/resources/asg.html#aws-asg-actions-suspend
+      classification:
+      - pillar: security
+        segment: access-control
+        scope: network
+        severity: medium
+  filters: &filters
   - type: security-group
     key: >
       IpPermissions[?ToPort == `22` && (contains(IpRanges[].CidrIp, '0.0.0.0/0') || contains(Ipv6Ranges[].CidrIpv6, '::0'))]
     value: not-null
+  create_events: &create_events
+  - event: CreateAutoScalingGroup
+    ids: requestParameters.autoScalingGroupName
+    source: autoscaling.amazonaws.com
+  update_events: &update_events
+  - event: UpdateAutoScalingGroup
+    ids: requestParameters.autoScalingGroupName
+    source: autoscaling.amazonaws.com
+policies:
+- name: workshop-asg-check-sg-open-ssh-inform
+  resource: aws.asg
+  filters: *filters
+  <<: *policy_meta
+- name: workshop-asg-check-sg-open-ssh-rtc
+  resource: aws.asg
+  mode: 
+    - type: cloudtrail
+      events: *create_events
+  filters: *filters
+  <<: *policy_meta
+- name: workshop-asg-check-sg-open-ssh-rtu
+  resource: aws.asg
+  mode: 
+    - type: cloudtrail
+      events: *update_events
+  filters: *filters
+  <<: *policy_meta

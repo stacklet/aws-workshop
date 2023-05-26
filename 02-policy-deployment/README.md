@@ -23,6 +23,8 @@ Leave everything else as default, and click the `add` button.
 
 Now browse to the repository, go to the `Policies` button and refresh the page until the policies appear. 
 
+![Policies](../assets/06-all-policies.png)
+
 # Creating a policy collection
 
 All policies are now loaded in the library. You can now organize them in a Policy Collection. Browse to `Admin > Controls > Policies` and filter the policies by typing `provider:aws` in the search bar. 
@@ -35,7 +37,8 @@ In the pop up window, note the `Automatically Update` check box. If you tick thi
 
 # Creating an Account Group
 
-Browse to `Admin > Clouds > Accounts` where you will find the AWS Account you added previously. Select it and use the `Add to group` button to create a new account group
+Browse to `Admin > Clouds > Accounts` where you will find the AWS Account you added previously. Select it and use the `Add to group` button to create a new account group. 
+Make sure to select the regions where you previously deployed the CloudFormation stack. 
 
 # Binding Policies to Accounts
 
@@ -55,4 +58,4 @@ The binding will take a few seconds to deploy, time for the platform to hook all
 
 As the Security stakeholder, you now have a layer of protection in your accounts that will notify you in case any of the aformentioned situations arise: non encrypted EFS drive, RDS, or misconfigured ELB. 
 
-[Back to Top](../README.md)
+[Next Step](../03-infrastructure-deployment/README.md) | [Back to Top](../README.md)

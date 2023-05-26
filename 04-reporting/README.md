@@ -13,11 +13,15 @@ In addition, Stacklet offers a flexible querying interface that lets you create 
 
 The console presents multiple dashboards presenting the current compliance of your environment against CIS 1.5, SOC2 and financial efficiency. 
 
-You can find the links to these dashboards in the top level "overview" section. 
+You can find the links to these dashboards in the top level `overview` section. 
 
 In addition, policies that are currently deployed in your environment appear in the `Overview > Deployed Policies` section. The `Resource Match Count` columns informs about the number of resources currently in violation.
 
+![Deployed Policies](../assets/07-deployed-policies.png)
+
 You can then go into each of the policies and discover which resources are currently in violation in the `Resource Matches` tab
+
+![Policy Page](../assets/08-policy-page.png)
 
 ## Redash
 
@@ -112,3 +116,4 @@ ORDER BY rr.version_id desc
 
 and check out the timeline of changes for that resource. 
 
+[Next Step](../05-remediation/README.md) | [Back to Top](../README.md)

@@ -62,4 +62,4 @@ Connect to the console `console.ws-<DestinationAccountID>.workshop.stacklet.io` 
 
 Use the output of the CloudFormation stack as the `Security Context`. 
 
-[Back to Top](../README.md)
+[Next Step](../01-policy-authoring/README.md) | [Back to Top](../README.md)

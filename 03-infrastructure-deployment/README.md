@@ -20,7 +20,7 @@ The Security Team did encode their requirements into c7n-left policies, and incl
 
 # Before you start
 
-The code for this section is available in the folder `03-polinfrastructure-deployment`. 
+The code for this section is available in the folder `03-infrastructure-deployment`. 
 
 # Writing the Infrastructure Code
 
@@ -95,26 +95,27 @@ Once you understand the basics of policies, you immediately start hacking your w
 
 ```shell
 git checkout infra/step-2
-terraform init
 ```
 
-Check the results and try to understand the issues in the Terraform code and how to fix them. 
+Check the results and try to understand the issues in the Terraform code and how to fix them. Fix them as you see fit and test that `c7n-left run -d . -p ../01-policy-authoring/iac` returns less issues over time. 
 
-You can deploy at any point with the sequence of commands:
+## Event Based Policies
+
+In your previous life as a Cloud Security Engineer, you deployed a number of runtime policies that react to the creation or changes made to cloud resources. Let's check how they behave in real life by deploying a highly degraded version of the infrastructure. 
 
 ```shell
+git checkout infra/step-3
+terraform init
 terraform plan
-terraform apply
+terraform apply --auto-approve
 ```
 
-Because we added policies that react to the creation of assets, and we made sure to send emails to notify you, you should get messages in your inbox if you do that prior to have fixed all the issues in the code. 
-
-Make sure to fix all the files (ie. remove the comments in most cases) to arrive to a point where all policies pass and your code is compliant with the Non Functional Requirements, then redeploy a final time. 
+Because we added policies that react to the creation of assets, and we made sure to send emails to notify you, you should get messages in your inbox within a few minutes that highlight the problems encountered.
 
 # Conclusion
 
-As a DevOps, you have now experienced how using Stacklet provides guardrails in both the infrastructure development phase and around the deployment phase. 
+As a DevOps, you have now experienced how using Stacklet provides guardrails in both the infrastructure development phase and around the deployment phase.
 
-You will now go back to your security persona and discover how you can analyze results. 
+You will now go back to your security persona and discover how you can analyze the data Stacklet aggregates to identify and contextualize cloud misconfigurations. 
 
-[Back to Top](../README.md)
+[Next Step](../04-reporting/README.md) | [Back to Top](../README.md)
