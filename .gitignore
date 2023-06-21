@@ -1,0 +1,9 @@
+.aws/credentials
+01-policy-authoring/execution/*.cache
+.bash_history
+.cache
+.lesshst
+.terraform.d
+.DS_Store
+01-policy-authoring/execution 
+05-remediation/execution

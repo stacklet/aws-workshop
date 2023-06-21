@@ -37,7 +37,6 @@ You come up with a first version of the code
 
 ```shell
 cd 03-infrastructure-deployment
-git checkout infra/step-1
 ```
 
 Before you commit your code, you want to make sure that it works. You run the validation command against your code: 
@@ -104,7 +103,6 @@ Check the results and try to understand the issues in the Terraform code and how
 In your previous life as a Cloud Security Engineer, you deployed a number of runtime policies that react to the creation or changes made to cloud resources. Let's check how they behave in real life by deploying a highly degraded version of the infrastructure. 
 
 ```shell
-git checkout infra/step-3
 terraform init
 terraform plan
 terraform apply --auto-approve
