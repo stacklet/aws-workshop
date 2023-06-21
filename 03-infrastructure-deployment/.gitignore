@@ -1,9 +1,10 @@
 mykey-pair
 mykey-pair.pub
 .terraform
+.terraform.tfstate*
 .terraform.lock.hcl
-terraform.tfstate
-terraform.tfstate.backup
+terraform.tfstate*
+terraform.tfstate.*
 user_data(exec).tpl
 banner.txt
 wordpress_tf.sh

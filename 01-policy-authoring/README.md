@@ -10,7 +10,7 @@ The code for this section is available in the folder `01-policy-authoring` and i
 cd 01-policy-authoring
 ```
 
-## High Level Design 
+## High Level Design
 
 As a member of the security team your mission is to help other developers consider security throughout the lifecycle of their applications. Said otherwise, security starts in the pipeline. 
 
@@ -31,7 +31,7 @@ As the solution matures, additional components will appear. This is already a gr
 
 ## Non Functional Requirements
 
-Armed with this list of AWS Services to secure, you start evaluating company policies that must apply against these resource types. 
+Armed with this list of AWS Services to secure, you start evaluating company policies that must apply against these resource types.
 
 * Everything that can be encrypted must be encrypted, in flight and at rest
 * Bad headers must never reach the application
@@ -40,7 +40,7 @@ Armed with this list of AWS Services to secure, you start evaluating company pol
 
 ## Translation into IaC Policies
 
-IaC controls are extremely useful in organizations using Terraform as their primary infrastrcture tool. IaC code that is not compliant with one or more policies can be intercepted pre-commit (on developer laptop), pre-merge (in CI pipeline) or pre-deploy (in CD pipeline) and denied moving forward. 
+IaC controls are extremely useful in organizations using Terraform as their primary infrastructure tool. IaC code that is not compliant with one or more policies can be intercepted pre-commit (on developer laptop), pre-merge (in CI pipeline) or pre-deploy (in CD pipeline) and denied moving forward. 
 This guarantees that everything that the application is compliant with ACME.inc's guardrails when you deploy it. 
 
 The workflow to generate more IaC policies is the following: 
@@ -98,7 +98,7 @@ $ tree .
         └── positive.tf
 ```
 
-The positive and negative files contain example of failing and passing resources respectively (ie. positive is a policy match, which turns into being a problem)
+The positive and negative files contain example of failing and passing resources respectively (ie. positive is a policy match, which means a violation)
 
 The `left.plan.yaml` file contains pointers to the resources in test files. 
 
@@ -108,25 +108,20 @@ The `left.plan.yaml` file contains pointers to the resources in test files.
 
 Writing policies for IaC is only solving the first part of the problem. In fact, once resources are deployed, you will still want to monitor them in the runtime in case somebody or something modifies them 
 
-As a starting point, let's look at the AWS API response to a query to [describe EFS File Systems](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/services/efs/client/describe_file_systems.html):
+As a starting point, let's look at the AWS API response to a query to [describe EFS File Systems](https://docs.aws.amazon.com/cli/latest/reference/efs/describe-file-systems.html):
 
 ```json
 {
-    "Marker": "string",
-    "FileSystems": [
-        {
-            "OwnerId": "string",
-            ...
-            "Encrypted": True|False,
-            "KmsKeyId": "string",
-            ...
-},
-    ],
-    "NextMarker": "string"
+    "FileSystemId": "fs-c7a0456e",
+    "Name": "my-file-system",
+    ...
+    "Encrypted": true,
+    "KmsKeyId": "arn:aws:kms:us-west-2:123456789012:key/a59b3472-e62c-42e4-adcf-30d92example",
+    ...
 }
 ```
 
-We immediately identify the node indicating the encryption, and can infer the policy: 
+We immediately identify the node indicating the encryption, and can infer the policy:
 
 ```yaml
 policies:
