@@ -1,0 +1,12 @@
+- resource.__tfmeta.filename: positive.tf
+  file_line_start: 1
+- resource.__tfmeta.filename: positive.tf
+  file_line_start: 4
+- resource.__tfmeta.filename: positive.tf
+  file_line_start: 14
+- resource.__tfmeta.filename: positive.tf
+  file_line_start: 24
+- resource.__tfmeta.filename: positive.tf
+  file_line_start: 34
+- resource.__tfmeta.filename: positive.tf
+  file_line_start: 44

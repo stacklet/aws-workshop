@@ -1,0 +1,29 @@
+vars:
+  resource_type: &resource_type terraform.aws_dynamodb_table
+  policy_meta: &policy_meta
+    description: |
+      Identifies DynamoDB Tables which are either missing required
+      tags or have incorrect required tag values.
+    metadata:
+      category:
+      - tagging
+      creator: Stacklet
+      severity: low
+      classification:
+      - pillar: operations
+        segment: tagging
+        scope: default
+        severity: low
+  filters: &filters
+    - or:
+      - "tag:Name": empty
+      - "tag:Owner": empty
+      - "tag:EUID": empty
+      - "tag:Service": empty
+      - "tag:Contact": empty
+
+policies:
+- name: aws-dynamodb-invalid-tags-iac
+  <<: *policy_meta
+  resource: *resource_type
+  filters: *filters

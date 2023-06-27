@@ -1,0 +1,26 @@
+vars:
+  resource_type: &resource_type terraform.gcp_bucket
+  policy_meta: &policy_meta
+    description: |
+      Identifies assets which are either missing required
+      tags or have incorrect required tag values.
+    metadata:
+      category:
+      - tagging
+      creator: Stacklet
+      severity: low
+      classification:
+      - pillar: operations
+        segment: tagging
+        scope: default
+        severity: low
+  filters: &filters
+    - or:
+      - "tag:owner": empty
+      - "tag:service": empty
+
+policies:
+- name: gcp-bucket-invalid-tags-iac
+  <<: *policy_meta
+  resource: *resource_type
+  filters: *filters

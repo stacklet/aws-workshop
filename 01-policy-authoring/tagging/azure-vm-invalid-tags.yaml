@@ -1,0 +1,26 @@
+vars:
+  resource_type: &resource_type terraform.azure_vm
+  policy_meta: &policy_meta
+    description: |
+      Identifies assets which are either missing required
+      tags or have incorrect required tag values.
+    metadata:
+      category:
+      - tagging
+      creator: Stacklet
+      severity: low
+      classification:
+      - pillar: operations
+        segment: tagging
+        scope: default
+        severity: low
+  filters: &filters
+    - or:
+      - "tag:Owner": empty
+      - "tag:Service": empty
+
+policies:
+- name: azure-vm-invalid-tags-iac
+  <<: *policy_meta
+  resource: *resource_type
+  filters: *filters
