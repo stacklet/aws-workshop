@@ -13,7 +13,7 @@ vars:
       - pillar: operations
         segment: tagging
         scope: default
-        severity: low
+        severity: LOW
   filters: &filters
     - or:
       - "tag:Name": empty
