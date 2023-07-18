@@ -8,7 +8,7 @@ vars:
       category:
       - tagging
       creator: Stacklet
-      severity: low
+      severity: LOW
       classification:
       - pillar: operations
         segment: tagging
