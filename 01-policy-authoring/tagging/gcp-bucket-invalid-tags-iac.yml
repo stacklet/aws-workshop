@@ -8,12 +8,12 @@ vars:
       category:
       - tagging
       creator: Stacklet
-      severity: low
+      severity: LOW
       classification:
       - pillar: operations
         segment: tagging
         scope: default
-        severity: low
+        severity: LOW
   filters: &filters
     - or:
       - "tag:owner": empty
